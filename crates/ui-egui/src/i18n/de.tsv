@@ -3505,7 +3505,7 @@ curves	Smooth	Glätten
 	Clear API key	API-Schlüssel löschen
 	Optional environment variable	Optionale Umgebungsvariable
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	Lokale oder selbst gehostete Bildgenerierung. Ohne Authentifizierung den API-Schlüssel leer lassen.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	API-Schlüssel werden in Ihrer lokalen Konfiguration gespeichert. Ein gespeicherter Schlüssel hat Vorrang vor der optionalen Umgebungsvariable.
+	API keys stay in memory for this session and are never written to your preferences. To keep a key between sessions, name an environment variable instead; a key entered here takes precedence over it.	API-Schlüssel bleiben nur für diese Sitzung im Arbeitsspeicher und werden nie in die Einstellungen geschrieben. Um einen Schlüssel dauerhaft zu nutzen, gib stattdessen eine Umgebungsvariable an; ein hier eingegebener Schlüssel hat Vorrang.
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	API-Schlüssel werden in der Server-Konfiguration gespeichert. Ein leeres Feld behält den gespeicherten Schlüssel; zum Entfernen auf API-Schlüssel löschen klicken.
 
 # AI additions: English defaults where translation is pending.

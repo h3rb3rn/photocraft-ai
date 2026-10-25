@@ -4238,7 +4238,6 @@ cameraRaw	Dehaze	Odstranění oparu
 	Clear API key	Vymazat klíč API
 	Optional environment variable	Volitelná proměnná prostředí
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	Místní generování obrázků nebo vlastní server. Pokud není nutné ověření, ponechte klíč API prázdný.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	Klíče API se ukládají do místní konfigurace. Uložený klíč má přednost před volitelnou proměnnou prostředí.
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	Klíče API se ukládají do konfigurace serveru. Prázdné pole zachová uložený klíč; pro odstranění použijte Vymazat klíč API.
 
 # AI additions: English defaults where translation is pending.

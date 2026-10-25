@@ -719,14 +719,20 @@ fn ai_credentials_are_private_and_public_roundtrips_preserve_them() {
     let mut s = session();
     let result = s.execute("prefs.set", json!({"path":"integrations.openaiPromptApiKey","value":"synthetic-config-key"})).unwrap();
     assert!(!result.to_string().contains("synthetic-config-key"));
-    assert!(s.prefs_to_json().contains("synthetic-config-key"));
+    assert!(!s.prefs_to_json().contains("synthetic-config-key"), "keys never reach the preferences file");
     let public = s.execute("prefs.get", json!({})).unwrap();
     assert!(public["integrations"]["openaiPromptApiKey"].is_null());
     s.execute("prefs.set", json!({"path":"integrations.openaiPromptApiKey","value":null})).unwrap();
     assert_eq!(s.prefs().integrations.openai_prompt_api_key.as_ref().unwrap().expose(), "synthetic-config-key");
+    // A reload of the stored settings neither revives file-borne keys nor drops the session's.
+    let legacy = r#"{"integrations":{"openaiPromptApiKey":"legacy-plaintext-key","openaiPromptApiKeyEnv":"MY_KEY"}}"#;
     let mut restored = session();
-    restored.load_prefs_json(&s.prefs_to_json()).unwrap();
-    assert_eq!(restored.prefs().integrations, s.prefs().integrations);
+    restored.load_prefs_json(legacy).unwrap();
+    assert!(restored.prefs().integrations.openai_prompt_api_key.is_none());
+    assert_eq!(restored.prefs().integrations.openai_prompt_api_key_env, "MY_KEY");
+    assert!(!restored.prefs_to_json().contains("legacy-plaintext-key"));
+    s.load_prefs_json(&s.prefs_to_json()).unwrap();
+    assert_eq!(s.prefs().integrations.openai_prompt_api_key.as_ref().unwrap().expose(), "synthetic-config-key");
     assert!(s.execute("prefs.set", json!({"path":"integrations.openaiPromptApiKey","value":"bad\nkey"})).is_err());
     s.execute("prefs.reset", json!({"path":"integrations.openaiPromptApiKey"})).unwrap();
     assert!(s.prefs().integrations.openai_prompt_api_key.is_none());

@@ -1565,7 +1565,7 @@ fn integrations_fields(ui: &mut egui::Ui, obj: &mut Map<String, Value>) {
         RichText::new(if cfg!(target_arch = "wasm32") {
             tl!("API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.")
         } else {
-            tl!("API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.")
+            tl!("API keys stay in memory for this session and are never written to your preferences. To keep a key between sessions, name an environment variable instead; a key entered here takes precedence over it.")
         })
         .small()
         .color(t.text_dim),
@@ -4329,7 +4329,7 @@ mod tests {
         h.get_by_label("ComfyUI");
         h.get_by_label("OpenAI · Prompt preparation");
         h.get_by_label("OpenAI · Images");
-        h.get_by_label("API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.");
+        h.get_by_label("API keys stay in memory for this session and are never written to your preferences. To keep a key between sessions, name an environment variable instead; a key entered here takes precedence over it.");
         h.get_by_label("Reset Section");
         // Merely opening and rendering the dialog does not change the preferences.
         assert_eq!(h.state().session.prefs().integrations, prefs::Integrations::default());
@@ -4345,10 +4345,13 @@ mod tests {
         assert_eq!(h.state().session.prefs().integrations.comfyui_endpoint, "http://127.0.0.1:8188");
         assert!(h.state().ui.dialogs.iter().any(|d| d.id == id));
         let saved = store.lock().unwrap().clone().unwrap();
-        let (mut restarted, _) = app_with_saved(Some(saved));
+        let (mut restarted, _) = app_with_saved(Some(saved.clone()));
         tick(&mut restarted, &egui::Context::default());
-        assert_eq!(restarted.session.prefs().integrations, h.state().session.prefs().integrations);
-        assert_eq!(restarted.session.prefs().integrations.openai_prompt_api_key.as_ref().unwrap().expose(), "synthetic-prompt-key");
+        // Keys last for the session only; the environment-variable name is what persists.
+        assert!(!saved.contains("synthetic-prompt-key"), "a key must not reach the preferences file");
+        assert!(restarted.session.prefs().integrations.openai_prompt_api_key.is_none());
+        assert_eq!(restarted.session.prefs().integrations.openai_image_api_key_env, "IMAGE_API_KEY");
+        assert_eq!(h.state().session.prefs().integrations.openai_prompt_api_key.as_ref().unwrap().expose(), "synthetic-prompt-key");
         assert!(!crate::control::inspect(h.state(), &ctx).to_string().contains("synthetic-prompt-key"));
 
         // Invalid drafts stay editable, including after an earlier successful Apply.
@@ -4358,7 +4361,10 @@ mod tests {
         assert!(h.state().ui.dialogs.iter().any(|d| d.id == id));
         h.get_by_label("Cancel").click();
         h.run_steps(4);
-        assert_eq!(h.state().session.prefs().integrations, restarted.session.prefs().integrations);
+        // Cancelling keeps the applied settings; only the session-only key differs from a restart.
+        let mut applied = h.state().session.prefs().integrations.clone();
+        applied.openai_prompt_api_key = None;
+        assert_eq!(applied, restarted.session.prefs().integrations);
     }
 
     #[test]

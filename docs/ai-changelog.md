@@ -9,8 +9,10 @@
 - Prepare ComfyUI prompts through a structured OpenAI-compatible Responses call;
   preserve opaque self-hosted model IDs without interpreting them as paths.
 - Add AI menus, context actions and endpoint/password configuration fields.
-- Persist API keys in private native/server configuration files and redact public
-  preference/control responses and browser storage.
+- Keep native API keys in memory for the session (only environment-variable names
+  persist), save web keys in the private gateway file, and redact public
+  preference/control responses and browser storage. Saving gateway configuration
+  obeys the operator allowlists; automation cannot set `integrations.*`.
 - Run the same AI commands in the Rust/WASM browser application through an
   authenticated Rust gateway deployed with Docker.
 - Support Docker API-key, language and prompt-model defaults with explicit

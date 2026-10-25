@@ -16,18 +16,25 @@ Open **Edit › Preferences › AI Integrations…** and set the base URLs:
 - ComfyUI: your server, for example `http://127.0.0.1:8188`.
 - OpenAI prompt and images: `https://api.openai.com/v1` by default.
 - API keys: enter the actual key in the password field for the corresponding service.
-  **Apply** persists it; **Clear API key** explicitly removes it. An unauthenticated
-  ComfyUI or self-hosted prompt endpoint can leave both key and optional variable blank.
-- Optional environment variable: existing installations may keep their variable names.
-  A directly saved key takes precedence. No environment variable is required.
+  **Apply** keeps it for the current session only; **Clear API key** removes it. An
+  unauthenticated ComfyUI or self-hosted prompt endpoint can leave both key and
+  optional variable blank.
+- Environment variable: to keep a key between sessions, name the variable that holds it.
+  Only the variable name is saved. A key entered in the session takes precedence.
 
-Desktop keys are stored in the local preference file with private file permissions
-(0600 on Linux). They are not encrypted. Public preference/control responses and
-job journals redact the key fields; image documents and result metadata contain no keys.
+Desktop keys are never written to the preference file; keys found in a file saved by an
+earlier build are ignored and removed on the next save. Public preference/control
+responses and job journals redact the key fields; image documents and result metadata
+contain no keys. Agents driving the app cannot change `integrations.*` preferences.
 In the browser, keys are saved through the authenticated Rust server into
 `/data/ai-config.json`, persisted by the Docker configuration volume. Browser
 localStorage contains only redacted key fields. A blank browser field keeps the
-server key; **Clear API key** removes it. Server configuration saving finishes
+server key; **Clear API key** removes it. Endpoints saved from the browser must be in
+the operator's allowlists (`PHOTOCRAFT_ALLOWED_COMFYUI_ENDPOINTS`,
+`PHOTOCRAFT_ALLOWED_PROMPT_ENDPOINTS`, `PHOTOCRAFT_ALLOWED_IMAGE_ENDPOINTS`,
+`PHOTOCRAFT_ALLOWED_DEPENDENCY_ENDPOINTS`; the configured endpoint is always allowed,
+the dependency list is empty by default), and key-variable names cannot be changed
+from the browser. Server configuration saving finishes
 before the next image job starts. Reverse-proxy URL prefixes are retained.
 
 The built-in ComfyUI profile requires these installed weights:

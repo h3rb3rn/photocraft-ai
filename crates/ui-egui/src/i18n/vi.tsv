@@ -3929,7 +3929,6 @@ curves	Smooth	Làm mượt
 	API key	API key
 	API key environment variable	API key environment variable
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.
 	Analysis instructions	Analysis instructions
 	Analyze image	Analyze image
 	Analyze the visible image and create an editable prompt for recreating it.	Analyze the visible image and create an editable prompt for recreating it.

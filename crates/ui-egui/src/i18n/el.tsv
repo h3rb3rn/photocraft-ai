@@ -4192,7 +4192,6 @@ curves	Smooth	Εξομάλυνση
 	Clear API key	Διαγραφή κλειδιού API
 	Optional environment variable	Προαιρετική μεταβλητή περιβάλλοντος
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	Δημιουργία εικόνων τοπικά ή σε δικό σας διακομιστή. Αφήστε το κλειδί API κενό αν δεν απαιτείται έλεγχος ταυτότητας.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	Τα κλειδιά API αποθηκεύονται στην τοπική διαμόρφωση. Το αποθηκευμένο κλειδί προηγείται της προαιρετικής μεταβλητής περιβάλλοντος.
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	Τα κλειδιά API αποθηκεύονται στη διαμόρφωση του διακομιστή. Ένα κενό πεδίο διατηρεί το αποθηκευμένο κλειδί· χρησιμοποιήστε Διαγραφή κλειδιού API για να το αφαιρέσετε.
 
 # AI additions: English defaults where translation is pending.

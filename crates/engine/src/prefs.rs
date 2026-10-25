@@ -973,6 +973,17 @@ impl Default for Integrations {
     }
 }
 
+/// JSON names of the credentials that are never written to the preferences file.
+const SESSION_CREDENTIALS: [&str; 4] = ["comfyuiDependencyApiKey", "comfyuiApiKey", "openaiPromptApiKey", "openaiImageApiKey"];
+
+fn strip_session_credentials(v: &mut Value) {
+    if let Some(integrations) = v.get_mut("integrations").and_then(Value::as_object_mut) {
+        for name in SESSION_CREDENTIALS {
+            integrations.remove(name);
+        }
+    }
+}
+
 impl Integrations {
     /// Used for both command updates and settings loaded from disk, before committing them.
     pub fn validate(&self) -> std::result::Result<(), String> {
@@ -1923,6 +1934,8 @@ impl Session {
             m.insert("version".into(), json!(PREFS_VERSION));
             m.insert("presets".into(), self.presets.to_json(self));
         }
+        // Credentials stay in memory for the session: only environment-variable names persist.
+        strip_session_credentials(&mut v);
         v
     }
 
@@ -1966,9 +1979,18 @@ impl Session {
         }
         let color = v.as_object_mut().and_then(|m| m.remove("colorSettings"));
         let presets = v.as_object_mut().and_then(|m| m.remove("presets"));
+        // Files written by earlier builds may hold plaintext keys; never read them back, so the
+        // next save removes them from disk.
+        strip_session_credentials(&mut v);
         let mut invalid = Vec::new();
-        let prefs: Preferences = read_lenient(v, &[], &mut invalid);
+        let mut prefs: Preferences = read_lenient(v, &[], &mut invalid);
         prefs.integrations.validate()?;
+        // Keys typed in this session survive a reload of the stored settings.
+        let current = &self.prefs().integrations;
+        prefs.integrations.comfyui_dependency_api_key = current.comfyui_dependency_api_key.clone();
+        prefs.integrations.comfyui_api_key = current.comfyui_api_key.clone();
+        prefs.integrations.openai_prompt_api_key = current.openai_prompt_api_key.clone();
+        prefs.integrations.openai_image_api_key = current.openai_image_api_key.clone();
         if let Some(c) = color {
             self.color.settings = read_lenient(c, &["colorSettings"], &mut invalid);
             photocraft_compose::psblend::set_text_gamma(self.color.settings.blend_text_gamma);

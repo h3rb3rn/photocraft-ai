@@ -4202,7 +4202,6 @@ curves	Smooth	Згладити
 	Clear API key	Видалити ключ API
 	Optional environment variable	Необов’язкова змінна середовища
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	Генерація зображень локально або на власному сервері. Якщо автентифікація не потрібна, залиште ключ API порожнім.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	Ключі API зберігаються в локальній конфігурації. Збережений ключ має пріоритет перед необов’язковою змінною середовища.
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	Ключі API зберігаються в конфігурації сервера. Порожнє поле зберігає наявний ключ; щоб видалити його, натисніть Видалити ключ API.
 
 # AI additions: English defaults where translation is pending.

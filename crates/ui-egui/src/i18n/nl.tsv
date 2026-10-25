@@ -4252,7 +4252,6 @@ curves	Smooth	Vloeiend maken
 	Clear API key	API-sleutel wissen
 	Optional environment variable	Optionele omgevingsvariabele
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	Lokale beeldgeneratie of op een eigen server. Laat de API-sleutel leeg als authenticatie niet nodig is.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	API-sleutels worden in uw lokale configuratie opgeslagen. Een opgeslagen sleutel heeft voorrang op de optionele omgevingsvariabele.
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	API-sleutels worden in de serverconfiguratie opgeslagen. Een leeg veld behoudt de opgeslagen sleutel; gebruik API-sleutel wissen om deze te verwijderen.
 
 # AI additions: English defaults where translation is pending.

@@ -3164,7 +3164,6 @@ curves	Smooth	平滑
 	Clear API key	清除 API 密钥
 	Optional environment variable	可选环境变量
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	在本地或自托管服务器上生成图像。无需身份验证时，请将 API 密钥留空。
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	API 密钥保存在本地配置中。保存的密钥优先于可选环境变量。
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	API 密钥保存在服务器配置中。空字段会保留已保存的密钥；请使用“清除 API 密钥”将其删除。
 
 # AI additions: English defaults where translation is pending.

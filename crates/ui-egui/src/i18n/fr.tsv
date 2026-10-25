@@ -4533,7 +4533,6 @@ shape	Appearance	Apparence
 	Clear API key	Effacer la clé API
 	Optional environment variable	Variable d’environnement facultative
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	Génération locale ou sur votre propre serveur. Laissez la clé API vide si aucune authentification n’est nécessaire.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	Les clés API sont enregistrées dans votre configuration locale. Une clé enregistrée est prioritaire sur la variable d’environnement facultative.
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	Les clés API sont enregistrées dans la configuration du serveur. Un champ vide conserve la clé enregistrée ; utilisez Effacer la clé API pour la supprimer.
 
 # AI additions: English defaults where translation is pending.

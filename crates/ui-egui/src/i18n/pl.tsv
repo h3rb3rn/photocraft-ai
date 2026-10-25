@@ -4109,7 +4109,6 @@ curves	Smooth	Wygładź
 	Clear API key	Usuń klucz API
 	Optional environment variable	Opcjonalna zmienna środowiskowa
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	Generowanie obrazów lokalnie lub na własnym serwerze. Pozostaw klucz API pusty, jeśli uwierzytelnianie nie jest wymagane.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	Klucze API są zapisywane w konfiguracji lokalnej. Zapisany klucz ma pierwszeństwo przed opcjonalną zmienną środowiskową.
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	Klucze API są zapisywane w konfiguracji serwera. Puste pole zachowuje zapisany klucz; użyj Usuń klucz API, aby go usunąć.
 
 # AI additions: English defaults where translation is pending.

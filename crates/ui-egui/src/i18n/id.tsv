@@ -3510,7 +3510,6 @@ curves	Smooth	Haluskan
 	Clear API key	Hapus kunci API
 	Optional environment variable	Variabel lingkungan opsional
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	Pembuatan gambar lokal atau pada server sendiri. Kosongkan kunci API jika autentikasi tidak diperlukan.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	Kunci API disimpan dalam konfigurasi lokal. Kunci tersimpan didahulukan daripada variabel lingkungan opsional.
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	Kunci API disimpan dalam konfigurasi server. Kolom kosong mempertahankan kunci tersimpan; gunakan Hapus kunci API untuk menghapusnya.
 
 # AI additions: English defaults where translation is pending.

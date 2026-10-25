@@ -4421,7 +4421,6 @@ layerLabel	No Color	Sem cor
 	Clear API key	Limpar chave API
 	Optional environment variable	Variável de ambiente opcional
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	Geração local de imagens ou em servidor próprio. Deixe a chave API vazia se não for necessária autenticação.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	As chaves API são salvas na configuração local. Uma chave salva tem prioridade sobre a variável de ambiente opcional.
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	As chaves API são salvas na configuração do servidor. Um campo vazio mantém a chave salva; use Limpar chave API para removê-la.
 
 # AI additions: English defaults where translation is pending.

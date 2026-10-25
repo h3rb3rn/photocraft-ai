@@ -4453,7 +4453,6 @@ navigator	Zoom	Zoom
 	Clear API key	Borrar clave API
 	Optional environment variable	Variable de entorno opcional
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	Generación de imágenes local o en servidor propio. Deje la clave API vacía si no se necesita autenticación.
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	Las claves API se guardan en la configuración local. La clave guardada tiene prioridad sobre la variable de entorno opcional.
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	Las claves API se guardan en la configuración del servidor. Un campo vacío conserva la clave guardada; use Borrar clave API para eliminarla.
 
 # AI additions: English defaults where translation is pending.

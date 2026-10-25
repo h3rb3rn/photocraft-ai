@@ -136,8 +136,9 @@ OpenAI prompt preparation (Responses) and direct OpenAI image generation/editing
 `http://127.0.0.1:8188`. A reverse-proxy path prefix is supported. Enter the base
 URL, without `/prompt`, `/responses` or `/images/generations`.
 
-Each service accepts a direct API key, saved in private configuration. Optional
-environment-variable references remain available; a saved key takes precedence.
+Each service accepts a direct API key, kept for the session in the desktop app and
+saved in the gateway's private configuration on the web. Environment-variable
+references are what the desktop app persists; a key entered directly takes precedence.
 Public control responses redact keys. Browser keys are saved by the authenticated
 gateway and excluded from browser storage. ComfyUI nodes/models are checked before
 upload or paid prompt preparation. Saving configuration makes no provider request.

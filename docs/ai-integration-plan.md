@@ -66,10 +66,15 @@ never clears the global ComfyUI queue or interrupts a different client's job.
 
 ## Credentials and configuration
 
-Direct API keys are entered in password fields under AI Integrations and saved
-in private native/server configuration files. Linux files use mode 0600. Keys
-are not encrypted; they are excluded from public preference/control snapshots,
-job journals, native image documents and browser localStorage.
+Direct API keys are entered in password fields under AI Integrations. In the
+desktop app they live in memory for the session and are never written to the
+preferences file (nor to its copies and backups); a key that must survive a
+restart is named by environment variable (`*ApiKeyEnv`), and only that name is
+stored. In the web gateway keys are saved in the server's private configuration
+file (mode 0600, not encrypted). Keys are excluded from public preference/control
+snapshots, job journals, native image documents and browser localStorage.
+Automation (control channel, MCP) cannot change `integrations.*` through
+`prefs.set`: endpoints and key variables decide where a credential is sent.
 
 The web host optionally accepts `OPENAI_API_KEY` and per-service Docker key
 variables. Menu-saved service keys take precedence. Environment credentials are

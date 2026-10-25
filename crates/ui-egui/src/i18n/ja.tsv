@@ -4172,7 +4172,6 @@ curves	Smooth	スムーズ
 	Clear API key	APIキーを削除
 	Optional environment variable	任意の環境変数
 	Local or self-hosted image generation. Leave the API key empty if no authentication is needed.	ローカルまたはセルフホストで画像を生成します。認証が不要な場合はAPIキーを空欄にしてください。
-	API keys are saved in your local configuration. A saved key takes precedence over the optional environment variable.	APIキーはローカル設定に保存されます。保存されたキーは任意の環境変数より優先されます。
 	API keys are saved in the server configuration. An empty field keeps the saved key; use Clear API key to remove it.	APIキーはサーバー設定に保存されます。空欄の場合は保存済みのキーを保持します。削除するには「APIキーを削除」を使用してください。
 
 # AI additions: English defaults where translation is pending.
