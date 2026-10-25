@@ -54,6 +54,7 @@ struct Host {
     comfy: Vec<String>,
     prompt: Vec<String>,
     images: Vec<String>,
+    dependency: Vec<String>,
     jobs: Mutex<BTreeMap<String, Arc<Job>>>,
     worker: Arc<Semaphore>,
 }
@@ -104,7 +105,9 @@ impl Host {
         let comfy = allowed("PHOTOCRAFT_ALLOWED_COMFYUI_ENDPOINTS", &providers.comfyui_endpoint);
         let prompt = allowed("PHOTOCRAFT_ALLOWED_PROMPT_ENDPOINTS", &providers.openai_prompt_endpoint);
         let images = allowed("PHOTOCRAFT_ALLOWED_IMAGE_ENDPOINTS", &providers.openai_image_endpoint);
-        for endpoint in comfy.iter().chain(&prompt).chain(&images) {
+        // Empty by default: web users cannot point the dependency key at a new service.
+        let dependency = allowed("PHOTOCRAFT_ALLOWED_DEPENDENCY_ENDPOINTS", "");
+        for endpoint in comfy.iter().chain(&prompt).chain(&images).chain(&dependency) {
             photocraft_ai::config::validate_endpoint(endpoint).map_err(|e| e.to_string())?;
         }
         Ok(Self {
@@ -118,6 +121,7 @@ impl Host {
             comfy,
             prompt,
             images,
+            dependency,
             jobs: Mutex::new(BTreeMap::new()),
             worker: Arc::new(Semaphore::new(1)),
         })
@@ -178,9 +182,35 @@ impl Host {
         public["webDefaults"] = json!({"language":self.language,"promptModel":self.prompt_model});
         public
     }
+    /// Saved endpoints receive the operator's keys, so they obey the same allowlists as jobs.
+    /// Key-variable names are operator settings, not web-user input.
+    fn check_saved_configuration(&self, incoming: &Integrations, stored: &Integrations) -> std::result::Result<(), String> {
+        for (url, kept, choices) in [
+            (&incoming.comfyui_endpoint, &stored.comfyui_endpoint, &self.comfy),
+            (&incoming.openai_prompt_endpoint, &stored.openai_prompt_endpoint, &self.prompt),
+            (&incoming.openai_image_endpoint, &stored.openai_image_endpoint, &self.images),
+        ] {
+            let url = url.trim_end_matches('/');
+            if url != kept.trim_end_matches('/') && !choices.iter().any(|choice| choice.trim_end_matches('/') == url) {
+                return Err("This API endpoint is not in the operator's allowlist".into());
+            }
+        }
+        if incoming.comfyui_api_key_env != stored.comfyui_api_key_env
+            || incoming.openai_prompt_api_key_env != stored.openai_prompt_api_key_env
+            || incoming.openai_image_api_key_env != stored.openai_image_api_key_env
+        {
+            return Err("API key environment variables are set by the operator and cannot be changed here".into());
+        }
+        let dependency = incoming.comfyui_dependency_endpoint.trim_end_matches('/');
+        if dependency != stored.comfyui_dependency_endpoint.trim_end_matches('/') && !self.dependency.iter().any(|choice| choice.trim_end_matches('/') == dependency) {
+            return Err("This dependency service endpoint is not in the operator's allowlist".into());
+        }
+        Ok(())
+    }
     fn save_configuration(&self, mut incoming: Integrations) -> std::result::Result<Value, String> {
         incoming.validate()?;
         let mut stored = self.providers.lock().unwrap_or_else(PoisonError::into_inner);
+        self.check_saved_configuration(&incoming, &stored)?;
         for (new, old) in [
             (&mut incoming.comfyui_dependency_api_key, &stored.comfyui_dependency_api_key),
             (&mut incoming.comfyui_api_key, &stored.comfyui_api_key),
@@ -467,6 +497,7 @@ mod tests {
             comfy: vec![defaults.comfyui_endpoint.clone()],
             prompt: vec![defaults.openai_prompt_endpoint.clone()],
             images: vec![defaults.openai_image_endpoint.clone()],
+            dependency: vec!["http://localhost:8190".into()],
             providers: Mutex::new(defaults),
             config_path: std::env::temp_dir().join(format!("photocraft-config-test-{}.json", uuid::Uuid::new_v4())),
             environment_prompt_key: None,
@@ -476,6 +507,25 @@ mod tests {
             jobs: Mutex::new(BTreeMap::new()),
             worker: Arc::new(Semaphore::new(1)),
         }
+    }
+    #[test]
+    fn saving_configuration_obeys_the_operator_allowlists() {
+        let host = Host { prompt: vec!["https://api.openai.com/v1".into(), "https://gateway.example/v1".into()], ..host() };
+        let mut incoming = Integrations { openai_prompt_endpoint: "https://attacker.example/v1".into(), ..Default::default() };
+        let error = host.save_configuration(incoming.clone()).unwrap_err();
+        assert!(error.contains("allowlist"), "{error}");
+        assert_eq!(host.providers.lock().unwrap().openai_prompt_endpoint, "https://api.openai.com/v1", "nothing was stored");
+        incoming.openai_prompt_endpoint = "https://gateway.example/v1/".into();
+        assert!(host.save_configuration(incoming.clone()).is_ok());
+        // Key variables and the dependency service stay with the operator.
+        let env = Integrations { openai_prompt_api_key_env: "PHOTOCRAFT_WEB_PASSWORD".into(), ..Default::default() };
+        assert!(host.save_configuration(env).is_err());
+        let dependency = Integrations {
+            openai_prompt_endpoint: incoming.openai_prompt_endpoint.clone(),
+            comfyui_dependency_endpoint: "https://attacker.example".into(),
+            ..Default::default()
+        };
+        assert!(host.save_configuration(dependency).is_err());
     }
     #[test]
     fn docker_defaults_are_redacted_and_menu_credentials_take_precedence() {
