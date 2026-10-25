@@ -320,7 +320,7 @@ impl Default for Interface {
             show_home_recent_files: true,
             canvas_border: CanvasBorder::DropShadow,
             ui_scale: UiScale::Auto,
-            language: "auto".into(),
+            language: "en".into(),
             ui_font_size: UiFontSize::Small,
             show_channels_in_color: false,
             dynamic_color_sliders: true,
@@ -932,15 +932,71 @@ impl Default for RawDefaults {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Integrations {
+    pub comfyui_dependency_endpoint: String,
+    pub comfyui_dependency_api_key: Option<photocraft_ai::secret::Secret>,
+    pub comfyui_api_key: Option<photocraft_ai::secret::Secret>,
+    pub openai_prompt_api_key: Option<photocraft_ai::secret::Secret>,
+    pub openai_image_api_key: Option<photocraft_ai::secret::Secret>,
     /// Allow agents to drive the app over the loopback control channel / MCP bridge.
     pub allow_agent_control: bool,
     /// Default control port (0 = only when `--control` is given).
     pub control_port: u32,
+    /// ComfyUI base URL (without `/prompt`), including an optional proxy path prefix.
+    pub comfyui_endpoint: String,
+    /// Optional environment-variable name; never the API key itself.
+    pub comfyui_api_key_env: String,
+    /// OpenAI-compatible base URL for the Responses prompt preparation stage.
+    pub openai_prompt_endpoint: String,
+    pub openai_prompt_api_key_env: String,
+    /// OpenAI-compatible base URL for direct image generation and editing.
+    pub openai_image_endpoint: String,
+    pub openai_image_api_key_env: String,
 }
 
 impl Default for Integrations {
     fn default() -> Self {
-        Self { allow_agent_control: true, control_port: 0 }
+        Self {
+            comfyui_dependency_endpoint: String::new(),
+            comfyui_dependency_api_key: None,
+            comfyui_api_key: None,
+            openai_prompt_api_key: None,
+            openai_image_api_key: None,
+            allow_agent_control: true,
+            control_port: 0,
+            comfyui_endpoint: "http://127.0.0.1:8188".into(),
+            comfyui_api_key_env: String::new(),
+            openai_prompt_endpoint: "https://api.openai.com/v1".into(),
+            openai_prompt_api_key_env: String::new(),
+            openai_image_endpoint: "https://api.openai.com/v1".into(),
+            openai_image_api_key_env: String::new(),
+        }
+    }
+}
+
+impl Integrations {
+    /// Used for both command updates and settings loaded from disk, before committing them.
+    pub fn validate(&self) -> std::result::Result<(), String> {
+        for key in [&self.comfyui_dependency_api_key, &self.comfyui_api_key, &self.openai_prompt_api_key, &self.openai_image_api_key].into_iter().flatten() {
+            key.validate().map_err(|e| e.to_string())?;
+        }
+        if !self.comfyui_dependency_endpoint.is_empty() {
+            photocraft_ai::config::validate_endpoint(&self.comfyui_dependency_endpoint).map_err(|e| e.to_string())?;
+        }
+        for (path, value) in [
+            ("comfyuiEndpoint", &self.comfyui_endpoint),
+            ("openaiPromptEndpoint", &self.openai_prompt_endpoint),
+            ("openaiImageEndpoint", &self.openai_image_endpoint),
+        ] {
+            photocraft_ai::config::validate_endpoint(value).map_err(|e| format!("integrations.{path}: {e}"))?;
+        }
+        for (path, value, optional) in [
+            ("comfyuiApiKeyEnv", &self.comfyui_api_key_env, true),
+            ("openaiPromptApiKeyEnv", &self.openai_prompt_api_key_env, true),
+            ("openaiImageApiKeyEnv", &self.openai_image_api_key_env, true),
+        ] {
+            photocraft_ai::config::validate_key_reference(value, optional).map_err(|e| format!("integrations.{path}: {e}"))?;
+        }
+        Ok(())
     }
 }
 
@@ -1106,7 +1162,7 @@ pub const SECTIONS: [(&str, &str); 18] = [
     ("type", "Type"),
     ("enhancedControls", "Enhanced Controls"),
     ("rawDefaults", "Camera Raw Defaults"),
-    ("integrations", "Integrations"),
+    ("integrations", "AI Integrations"),
 ];
 
 /// Preferences that nothing reads yet, so Edit › Preferences doesn't show them: a control that
@@ -1402,6 +1458,12 @@ impl Preferences {
             }
             return Ok(());
         }
+        if value.is_null()
+            && ["integrations.comfyuiDependencyApiKey", "integrations.comfyuiApiKey", "integrations.openaiPromptApiKey", "integrations.openaiImageApiKey"]
+                .contains(&path)
+        {
+            return Ok(()); // Public snapshots hide stored keys; null means keep the existing value.
+        }
         let value = match (path.strip_prefix("shortcuts."), &value) {
             // Normalise shortcut spelling so conflicts compare equal.
             (Some(_), Value::String(s)) if !s.is_empty() => Value::String(normalize_shortcut(s).ok_or_else(|| format!("`{s}` is not a valid shortcut"))?),
@@ -1416,7 +1478,9 @@ impl Preferences {
         check_value(path, &value)?;
         let mut root = self.to_json();
         set_path(&mut root, path, value)?;
-        *self = serde_json::from_value(root).map_err(|e| format!("invalid value for `{path}`: {e}"))?;
+        let next: Self = serde_json::from_value(root).map_err(|e| format!("invalid value for `{path}`: {e}"))?;
+        next.integrations.validate()?;
+        *self = next;
         Ok(())
     }
 
@@ -1904,6 +1968,7 @@ impl Session {
         let presets = v.as_object_mut().and_then(|m| m.remove("presets"));
         let mut invalid = Vec::new();
         let prefs: Preferences = read_lenient(v, &[], &mut invalid);
+        prefs.integrations.validate()?;
         if let Some(c) = color {
             self.color.settings = read_lenient(c, &["colorSettings"], &mut invalid);
             photocraft_compose::psblend::set_text_gamma(self.color.settings.blend_text_gamma);
@@ -1922,6 +1987,7 @@ impl Session {
         if let Value::Object(m) = &mut v {
             m.insert("colorSettings".into(), serde_json::to_value(&self.color.settings).unwrap_or(Value::Null));
         }
+        photocraft_ai::secret::redact(&mut v);
         v
     }
 
@@ -2134,7 +2200,8 @@ fn prefs_reset(s: &mut Session, p: &Value) -> Result<Value> {
 fn preferences_section(s: &mut Session, p: &Value) -> Result<Value> {
     let section = p.get("__section").and_then(Value::as_str).unwrap_or("general").to_string();
     let title = SECTIONS.iter().find(|(id, _)| *id == section).map_or("General", |(_, t)| *t);
-    let values = s.prefs().get(&section).unwrap_or(Value::Null);
+    let mut values = s.prefs().get(&section).unwrap_or(Value::Null);
+    photocraft_ai::secret::redact(&mut values);
     Ok(json!({"section": section, "title": title, "values": values}))
 }
 
@@ -2713,7 +2780,7 @@ pub fn specs() -> Vec<CommandSpec> {
         section!("edit.preferences.type", "Type…"),
         section!("edit.preferences.enhancedControls", "Enhanced Controls…"),
         section!("edit.preferences.rawDefaults", "Camera Raw…"),
-        section!("edit.preferences.integrations", "Integrations…"),
+        section!("edit.preferences.integrations", "AI Integrations…"),
         spec!(
             "edit.keyboardShortcuts",
             "Keyboard Shortcuts…",
