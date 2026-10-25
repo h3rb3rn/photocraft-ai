@@ -1194,6 +1194,37 @@ pub fn specs() -> Vec<crate::commands::CommandSpec> {
     ]
 }
 
+/// Native worker with document lifetime but no editing lock. Headless execution stays inline.
+#[cfg(not(target_arch = "wasm32"))]
+pub fn run_external<T: Send + 'static>(
+    session: &mut Session,
+    command: &str,
+    label: &str,
+    document: Option<DocId>,
+    work: impl FnOnce(&JobCtx) -> Result<T> + Send + 'static,
+    apply: impl FnOnce(&mut Session, T) -> Result<Value> + Send + 'static,
+) -> Result<Value> {
+    if !session.jobs.spawn {
+        let result = work(&session.jobs.inline.clone().unwrap_or_default())?;
+        return apply(session, result);
+    }
+    let completion = session.start_external_job(command, label, document, apply)?;
+    let id = completion.id;
+    let context = completion.ctx.clone();
+    let handle = std::thread::Builder::new()
+        .name(format!("photocraft-ai-{}", id.0))
+        .spawn(move || {
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| work(&context)))
+                .unwrap_or_else(|_| Err(EngineError::Other("AI worker failed with an internal error; the document is unchanged".into())));
+            completion.complete(result);
+        })
+        .map_err(|_| EngineError::Other("could not start AI worker".into()))?;
+    if let Some(pending) = &mut session.jobs.pending {
+        pending.handle = Some(handle);
+    }
+    Ok(json!({"job":id.0,"pending":true}))
+}
+
 #[cfg(test)]
 #[path = "jobs_tests.rs"]
 mod tests;
@@ -1246,35 +1277,4 @@ mod psd_open_confirmation_tests {
             }
         }
     }
-}
-
-/// Native worker with document lifetime but no editing lock. Headless execution stays inline.
-#[cfg(not(target_arch = "wasm32"))]
-pub fn run_external<T: Send + 'static>(
-    session: &mut Session,
-    command: &str,
-    label: &str,
-    document: Option<DocId>,
-    work: impl FnOnce(&JobCtx) -> Result<T> + Send + 'static,
-    apply: impl FnOnce(&mut Session, T) -> Result<Value> + Send + 'static,
-) -> Result<Value> {
-    if !session.jobs.spawn {
-        let result = work(&session.jobs.inline.clone().unwrap_or_default())?;
-        return apply(session, result);
-    }
-    let completion = session.start_external_job(command, label, document, apply)?;
-    let id = completion.id;
-    let context = completion.ctx.clone();
-    let handle = std::thread::Builder::new()
-        .name(format!("photocraft-ai-{}", id.0))
-        .spawn(move || {
-            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| work(&context)))
-                .unwrap_or_else(|_| Err(EngineError::Other("AI worker failed with an internal error; the document is unchanged".into())));
-            completion.complete(result);
-        })
-        .map_err(|_| EngineError::Other("could not start AI worker".into()))?;
-    if let Some(pending) = &mut session.jobs.pending {
-        pending.handle = Some(handle);
-    }
-    Ok(json!({"job":id.0,"pending":true}))
 }
