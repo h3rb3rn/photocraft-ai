@@ -331,10 +331,10 @@ fn results(app: &mut PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String, 
     let rows = listing.get("results").and_then(Value::as_array).cloned().unwrap_or_default();
     let ids: Vec<u64> = rows.iter().filter_map(|row| row.get("result").and_then(Value::as_u64)).collect();
     ui.ctx().data_mut(|data| {
-        let cache = egui::Id::new("ai-preview-ids");
+        let cache = egui::Id::unique("ai-preview-ids");
         for old in data.get_temp::<Vec<u64>>(cache).unwrap_or_default() {
             if !ids.contains(&old) {
-                data.remove::<egui::TextureHandle>(egui::Id::new(("ai-preview", old)));
+                data.remove::<egui::TextureHandle>(egui::Id::unique(("ai-preview", old)));
             }
         }
         data.insert_temp(cache, ids);
@@ -359,7 +359,7 @@ fn results(app: &mut PhotocraftApp, ui: &mut egui::Ui, fields: &mut Map<String, 
                 ui.label(&prompt.positive);
             }
             if let Some(preview) = app.session.ai_preview(id, 0) {
-                let key = egui::Id::new(("ai-preview", id));
+                let key = egui::Id::unique(("ai-preview", id));
                 let cached = ui.ctx().data_mut(|data| data.get_temp::<egui::TextureHandle>(key));
                 let texture = if let Some(texture) = cached {
                     texture
@@ -657,7 +657,7 @@ mod tests {
             let mut fields = Map::new();
             for _ in 0..2 {
                 context.run_ui(Default::default(), |ui| results(&mut app, ui, &mut fields)).textures_delta.clear();
-                assert!(context.data_mut(|data| data.get_temp::<egui::TextureHandle>(egui::Id::new(("ai-preview", id)))).is_some());
+                assert!(context.data_mut(|data| data.get_temp::<egui::TextureHandle>(egui::Id::unique(("ai-preview", id)))).is_some());
             }
             sender.send(()).unwrap();
         });
