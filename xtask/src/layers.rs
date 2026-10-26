@@ -63,6 +63,7 @@ pub const TABLE: &[(&str, Class)] = &[
     ("ml", Class::Layer(4)),
     ("plugins", Class::Layer(4)),
     ("ai", Class::Layer(4)),
+    ("comfy-deps", Class::Exempt),
     ("engine", Class::Layer(5)),
     ("ui-egui", Class::Layer(6)),
     ("automation", Class::Layer(6)),
