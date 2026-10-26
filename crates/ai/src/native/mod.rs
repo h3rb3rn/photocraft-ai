@@ -44,6 +44,9 @@ impl Http {
     }
     fn with_key(base: &str, key: Option<String>) -> Result<Self> {
         crate::config::validate_endpoint(base)?;
+        if key.is_some() && base.starts_with("http://") && !crate::config::cleartext_credentials_allowed(base) {
+            return Err(AiError::InvalidRequest("An API key is only sent over HTTPS, or over HTTP to a loopback, private-network or .local address".into()));
+        }
         let client = Client::builder()
             .redirect(reqwest::redirect::Policy::none())
             .connect_timeout(Duration::from_secs(10))

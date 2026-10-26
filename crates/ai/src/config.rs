@@ -19,6 +19,21 @@ pub fn validate_endpoint(value: &str) -> Result<()> {
     Ok(())
 }
 
+/// A key may travel over plain HTTP only to a machine on the user's own network: loopback,
+/// private/link-local addresses, single-label and `.local`/`.lan`/`.internal` names.
+pub fn cleartext_credentials_allowed(base: &str) -> bool {
+    let Ok(url) = url::Url::parse(base) else { return false };
+    match url.host() {
+        Some(url::Host::Ipv4(ip)) => ip.is_loopback() || ip.is_private() || ip.is_link_local(),
+        Some(url::Host::Ipv6(ip)) => ip.is_loopback() || (ip.segments()[0] & 0xfe00) == 0xfc00 || (ip.segments()[0] & 0xffc0) == 0xfe80,
+        Some(url::Host::Domain(name)) => {
+            let name = name.trim_end_matches('.').to_ascii_lowercase();
+            !name.contains('.') || [".local", ".lan", ".internal", ".home.arpa"].iter().any(|suffix| name.ends_with(suffix))
+        }
+        None => false,
+    }
+}
+
 /// Name of an environment variable containing a key; an empty name means unauthenticated.
 /// Only the name is persisted, so setting preferences cannot expose a key in jobs or logs.
 pub fn validate_key_reference(value: &str, optional: bool) -> Result<()> {
@@ -88,6 +103,16 @@ mod tests {
             assert!(validate_endpoint(url).is_err(), "{url:?}");
         }
         assert!(validate_endpoint(&format!("https://example.com/{}", "a".repeat(2048))).is_err());
+    }
+
+    #[test]
+    fn keys_do_not_travel_in_clear_over_the_internet() {
+        for url in ["http://127.0.0.1:8188", "http://192.168.1.5:8188", "http://[::1]:8188", "http://comfy-box:8188", "http://gpu.local/v1"] {
+            assert!(cleartext_credentials_allowed(url), "{url}");
+        }
+        for url in ["http://api.example.com/v1", "http://8.8.8.8/v1", "http://[2001:db8::1]/v1", "http://localhost.evil.com/v1"] {
+            assert!(!cleartext_credentials_allowed(url), "{url}");
+        }
     }
 
     #[test]
