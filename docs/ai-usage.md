@@ -99,7 +99,7 @@ Downloads run on the ComfyUI host with normal progress and cancellation controls
 The companion service verifies new downloads against fixed sizes and SHA-256
 hashes and preserves existing files. Existing files are checked by size only;
 a size mismatch is reported for manual review. It does not install arbitrary
-custom nodes or restart ComfyUI. See the service deployment guide (`packaging/comfy-deps/README.md`).
+custom nodes or restart ComfyUI. See the [service deployment guide](../packaging/comfy-deps/README.md).
 
 English is the default UI language. Existing translations are retained; newly
 added AI strings use English where a translation is pending.
